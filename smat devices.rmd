@@ -1,0 +1,173 @@
+---
+title: "2022 01analysis-for-smart devices-data"
+author: "abdelrahman Ashraf"
+date: "2/11/2022"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+library(tidyverse)
+library(tibble)
+library(skimr)
+library(janitor)
+library(ggplot2)
+library(palmerpenguins)
+library(dplyr)
+library(sqldf)
+sleep_day <- read.csv('sleepDay_merged.csv')
+daily_activity <- read.csv('dailyActivity_merged.csv')
+
+```
+
+## summary for analysis watches data
+
+objective:
+analyze smart device usage data in order 
+to gain insight into how consumers use smart
+devices
+
+firstly we have two  data from third-party sources:
+  1- sleep_Day
+  2- daily_activity
+
+so we should merge these data to find out relationships between  differents activities  
+  so we start with this code
+
+You can also embed plots, for example:
+```{r }
+combined_data <- merge(sleep_day, daily_activity, by = "Id")
+ws <- combined_data
+n_distinct(combined_data$Id)
+
+```
+
+so we observe we have 24 id related with two data 
+
+## what ralationship between fairly active minutes and burn calories?
+
+```{r echo=TRUE}
+ggplot(data = combined_data, aes(y= Calories,x=FairlyActiveMinutes))+
+  geom_point()+
+  geom_smooth(method = 'gam',formula = y~s(x))
+
+```
+
+so we find most observations between 0 and 50 minutes
+   with average calories 2316.836 and
+   11508 observations from origin 12441
+   so every body have low fairly active minutes 
+   who have high potiontial to use smart devices 
+
+##  so let us move to find relation between sleeping and burn calories
+
+
+```{r , echo=TRUE}
+
+ggplot(data = ws, aes(x= TotalMinutesAsleep,y=Calories))+
+  geom_jitter()+
+  geom_smooth(method = 'gam',formula = y~s(x))
+```
+```{r , echo=FALSE}
+
+we <- ws%>%
+  arrange(Calories)%>%
+  filter(Calories > 0)%>%
+  filter(TotalMinutesAsleep > 300, TotalMinutesAsleep < 575)
+midle_specifies<- c("mostPeople_with_minutes_sleep",
+    nrow(we),
+    mean(we$Calories),
+    median(we$Calories),
+    max(we$Calories))
+##}
+less_300_min <- ws%>%
+  arrange(Calories)%>%
+  filter(Calories > 0)%>%
+  filter(TotalMinutesAsleep < 300)
+##summary
+less_specifies<- c("less_minutes_sleep",
+    nrow(less_300_min),
+    mean(less_300_min$Calories),
+    median(less_300_min$Calories),
+    max(less_300_min$Calories))
+larger_575_min <- ws%>%
+  arrange(Calories)%>%
+  filter(Calories > 0)%>%
+  filter(TotalMinutesAsleep > 575)
+pivot_we <- summary(we)
+
+larg_specifies<- c("larger_minutes_sleep",
+    nrow(larger_575_min),
+    mean(larger_575_min$Calories),
+    median(larger_575_min$Calories),
+    max(larger_575_min$Calories))
+summar <- data.frame(c("name","count_of_records","averageCalories","medianCalories","maximamCalories"),larg_specifies,less_specifies,midle_specifies)
+summur <- as.data.frame(summar)
+```
+
+```{r , echo=TRUE}
+
+head(summar)
+
+```
+so
+
+### 1- we find most peoble were burning calories 
+
+   in peroid between 300 and 575 minutes sleeping
+   with average 2378 and with 10235 observations 
+   from origin 12441
+   with maximam calories 4900
+   
+### 2- the less peoble were burning calories 
+
+   in peroid larger than 575 minuite sleeping
+   with average 2218 and with 672 observations 
+   from origin 12441
+   but they peoble were still high calories but thier potiontial to burn calories very lower
+   
+###  3- the  peoble were burning calories 
+
+   in peroid lower than 300 minuite sleeping
+   with less average 2083 by comparing another peroids
+   and with 1509 observations 
+   from origin 12441
+   with maximam calories 4552
+   
+## so let us move to another chart to explore relation between rate between sedantry minutes and burning calories
+
+```{r ,echo=TRUE}
+ggplot(data = ws, aes(x= SedentaryMinutes , y=Calories))+
+  geom_jitter()+
+  geom_smooth(method = 'gam',formula = y~s(x))
+
+```
+
+so we find most peoble burning calories those were who had from 500 to 1000 minutes in the day  but those peoble were  who had less than 500 it couldnt burning calories and there are potintial with the peoble were who had larger than 1000 Sedentary minutes
+
+##  let us move to another chart to find out relation between total steps and burning calories
+
+```{r ,echo=TRUE}
+ggplot(data = ws, aes(x= TotalSteps,y=Calories))+
+  geom_jitter()+
+  geom_smooth(method = 'gam',formula = y~s(x))
+
+```
+
+we found postive relation between total steps's every person and burning calories  but the peoble who have more steps they less when the rate of steps larg
+
+
+##  Recommendations
+
+
+* Attract people who were had from 0 to 50  Activate minutes in the every day and tell because they had a big chance to use smart device
+
+* Attract people who were had from 325 to 675 sleeping minutes in the every day
+
+* Attract people who were had from 500 to 1250 free minutes in every day
+
+* Attract people who were had 0 to 15000 total steps in every day
+
+
+
